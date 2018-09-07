@@ -23,11 +23,10 @@ cfExt.init(function (api) {
   var productField = api.entry.fields.product;
   var colorField = api.entry.fields.color;
   var designField = api.entry.fields.design;
-
-  console.log('API', api);
+  var keySources = [productField, colorField, designField];
 
   var _ = window._;
-  var getKey = window.getKey;
+  var getSlug = window.getSlug;
   var debouncedUpdateStatus = _.debounce(updateStatus, 500);
 
   var input = document.getElementById('key');
@@ -39,25 +38,25 @@ cfExt.init(function (api) {
 
   api.window.updateHeight();
 
-  productField.onValueChanged(handleKeyChange);
-  colorField.onValueChanged(handleKeyChange);
-  designField.onValueChanged(handleKeyChange);
+  productField.onValueChanged((value) => handleKeyChange('product', value));
+  colorField.onValueChanged((value) => handleKeyChange('color', value));
+  designField.onValueChanged((value) => handleKeyChange('design', value));
 
-  input.addEventListener('input', function () {
-    handleKeyChange(input.value);
-  });
-  input.addEventListener('change', function () {
-    handleKeyChange(input.value);
-  });
+  input.addEventListener('input', () => handleKeyChange('key', input.value));
+  input.addEventListener('change', () => handleKeyChange('key', input.value));
 
   updateStatus(keyField.getValue());
 
   /**
-   * Handle change of key value caused by either changing key field
-   * or changing the title of the entry
+   * Handle change of field value caused by either changing key field
+   * or modifying the product, color or design
    */
-  function handleKeyChange (value) {
-    setKey(getKey(value || ''));
+  function handleKeyChange (field, value) {
+    var modifiedValue = value;
+    if (field !== 'key') {
+      modifiedValue = getProductKey();
+    }
+    setKey(getSlug(modifiedValue || ''));
   }
 
   /**
@@ -118,6 +117,22 @@ cfExt.init(function (api) {
     return api.space.getEntries(query).then(function (result) {
       return result.total > 0;
     });
+  }
+  
+  /**
+   * Build a product key consisting of the product type, color, and design with a custom delimiter.
+   */
+  function getProductKey () {
+    const delimiter = '_';
+    return keySources.reduce((acc, src, ind) => `${acc}${(ind > 0) ? delimiter : ''}${formatTextForKey(src.getValue())}`, '');
+  }
+
+  /**
+   * Utility function for the key builder to remove/replace specific characters from a string.
+   */
+  function formatTextForKey(value) {
+    const regex = /'|"/gmi;
+    return value.replace(regex, '');  
   }
 });
 </script>
