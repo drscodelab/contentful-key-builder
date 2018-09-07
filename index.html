@@ -5,10 +5,10 @@
   <link href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css" media="all" rel="stylesheet" type="text/css">
   <script type="text/javascript" src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
 </head>
-<div class="widget-slug-editor">
-  <input id="slug" type="text" class="form-control" style="width: 98%; font-size: 14px">
-  <i id="error" class="fa fa-exclamation-triangle is-slug-duplicate"></i>
-  <i id="ok" class="fa fa-check-circle is-slug-unique"></i>
+<div class="widget-key-editor">
+  <input id="key" type="text" class="form-control" style="width: 98%; font-size: 14px">
+  <i id="error" class="fa fa-exclamation-triangle is-key-duplicate"></i>
+  <i id="ok" class="fa fa-check-circle is-key-unique"></i>
   <i id="loading" class="fa fa-spinner fa-spin"></i>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.0.2/es6-promise.js"></script>
@@ -19,16 +19,18 @@
 var cfExt = window.contentfulExtension || window.contentfulWidget;
 
 cfExt.init(function (api) {
-  var slugField = api.field;
-  var titleField = api.entry.fields.title;
+  var keyField = api.field;
+  var productField = api.entry.fields.product;
+  var colorField = api.entry.fields.color;
+  var designField = api.entry.fields.design;
 
   console.log('API', api);
 
   var _ = window._;
-  var getSlug = window.getSlug;
+  var getKey = window.getKey;
   var debouncedUpdateStatus = _.debounce(updateStatus, 500);
 
-  var input = document.getElementById('slug');
+  var input = document.getElementById('key');
   var statusElements = {
     error: document.getElementById('error'),
     ok: document.getElementById('ok'),
@@ -37,41 +39,43 @@ cfExt.init(function (api) {
 
   api.window.updateHeight();
 
-  titleField.onValueChanged(handleSlugChange);
+  productField.onValueChanged(handleKeyChange);
+  colorField.onValueChanged(handleKeyChange);
+  designField.onValueChanged(handleKeyChange);
 
   input.addEventListener('input', function () {
-    handleSlugChange(input.value);
+    handleKeyChange(input.value);
   });
   input.addEventListener('change', function () {
-    handleSlugChange(input.value);
+    handleKeyChange(input.value);
   });
 
-  updateStatus(slugField.getValue());
+  updateStatus(keyField.getValue());
 
   /**
-   * Handle change of slug value caused by either changing slug field
+   * Handle change of key value caused by either changing key field
    * or changing the title of the entry
    */
-  function handleSlugChange (value) {
-    setSlug(getSlug(value || ''));
+  function handleKeyChange (value) {
+    setKey(getKey(value || ''));
   }
 
   /**
-   * Set the input value to 'slug' and update the status by checking for
+   * Set the input value to 'key' and update the status by checking for
    * duplicates.
    */
-  function setSlug (slug) {
-    input.value = slug;
-    slugField.setValue(slug);
+  function setKey (key) {
+    input.value = key;
+    keyField.setValue(key);
     setStatus('loading');
-    debouncedUpdateStatus(slug);
+    debouncedUpdateStatus(key);
   }
 
   /**
    * Show inline status icon based on current status
    */
-  function updateStatus (slug) {
-    getDuplicates(slug).then(function (hasDuplicates) {
+  function updateStatus (key) {
+    getDuplicates(key).then(function (hasDuplicates) {
       if (hasDuplicates) {
         setStatus('error');
       } else {
@@ -95,19 +99,19 @@ cfExt.init(function (api) {
 
 
   /**
-   * Check if slug is already in use.
+   * Check if key is already in use.
    * Resolves to 'true' if there are entries of the given content type that have
-   * the same 'slug' value.
+   * the same 'key' value.
    */
-  function getDuplicates (slug) {
-    if (!slug) {
+  function getDuplicates (key) {
+    if (!key) {
       return Promise.resolve(false);
     }
 
     var query = {};
 
     query['content_type'] = api.entry.getSys().contentType.sys.id;
-    query['fields.' + slugField.id] = slug;
+    query['fields.' + keyField.id] = key;
     query['sys.id[ne]'] = api.entry.getSys().id;
     query['sys.publishedAt[exists]'] = true;
 
