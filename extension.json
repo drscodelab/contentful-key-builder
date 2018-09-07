@@ -1,6 +1,6 @@
 {
-  "id": "slug",
-  "name": "Product Slug Generator",
+  "id": "key",
+  "name": "Product Key Generator",
   "srcdoc": "./index.html",
   "fieldTypes": ["Symbol"]
 }
