@@ -134,5 +134,19 @@ cfExt.init(function (api) {
     const regex = /'|"/gmi;
     return value.replace(regex, '');  
   }
+  
+  /**
+   * Utility function for the key builder to prepend gender to the product key.
+   */
+  function prependGenderToKey(value) {
+    const delimiter = '-';
+    console.log(value, value.indexOf('mens'), value.indexOf('womens'));
+    if (value.toLowerCase().indexOf('womens' > -1)) {
+      return `FEMALE${delimiter}${value}`;
+    }
+    if (value.toLowerCase().indexOf('mens' > -1)) {
+      return `MALE${delimiter}${value}`;
+    }
+  }
 });
 </script>
